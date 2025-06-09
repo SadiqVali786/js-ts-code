@@ -1,16 +1,30 @@
-// Refactor this code
+const buildTaskURL = (
+  dev = false,
+  tasks = { prevTasks: true, nextTasks: false },
+  options = { size: 20, status: "ACTIVE" }
+) => {
+  if (tasks.nextTasks === tasks.prevTasks)
+    return { error: "prevTasks & nextTasks should be !==" };
 
-function getURL(dev = false, tasks = {}) {
-    let url = dev
-        ? `/tasks?status=ACTIVE&dev=true&size=20`
-        : '/tasks';
+  // Pagination takes precedence - prevTasks overrides all other parameters
+  if (tasks.prevTasks) return { url: "/tasks?hasPrev=true" };
 
-    if (tasks.nextTasks) {
-        url += '?hasNext=true';
-    }
+  const baseEndpoint = "/tasks";
+  const searchParams = new URLSearchParams();
 
-    if (tasks.prevTasks) {
-        url = '/tasks?hasPrev=true';
-    }
-    return { url };
-}
+  // Add dev mode parameters
+  if (dev) {
+    searchParams.set("status", options.status);
+    searchParams.set("dev", dev.toString());
+    searchParams.set("size", options.size.toString());
+  }
+
+  // Add next page parameter if requested
+  if (tasks.nextTasks) searchParams.set("hasNext", tasks.nextTasks.toString());
+
+  // Construct final URL
+  const queryString = searchParams.toString();
+  const url = queryString ? `${baseEndpoint}?${queryString}` : baseEndpoint;
+
+  return { url };
+};
